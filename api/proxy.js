@@ -1,5 +1,5 @@
 // Vercel Serverless Function - API代理
-// 将所有请求转发到后端服务器
+// 将所有 /api/* 请求转发到后端服务器
 
 const axios = require('axios')
 
@@ -18,10 +18,11 @@ module.exports = async (req, res) => {
     return
   }
 
-  // 从URL中提取实际请求路径
-  // Vercel中访问路径: /api/proxy/user/login
-  // 实际转发路径: /user/login
-  const path = req.url.replace('/api/proxy', '') || '/'
+  // 提取原始请求路径
+  // Vercel rewrite: /api/knowledge/article/page -> /api/proxy/knowledge/article/page
+  // 需要提取出 /knowledge/article/page，然后前面加回 /api
+  const rawPath = req.url.replace('/api/proxy', '').split('?')[0] || '/'
+  const path = '/api' + rawPath
   const url = `${TARGET_BASE_URL}${path}`
 
   // 透传请求头
@@ -33,12 +34,15 @@ module.exports = async (req, res) => {
     forwardHeaders['Content-Type'] = req.headers['content-type']
   }
 
+  // GET 请求参数（Vercel 自动解析 query string 到 req.query）
+  const params = req.method === 'GET' ? { ...req.query } : undefined
+
   try {
     const response = await axios({
       url,
       method: req.method,
       data: req.method !== 'GET' ? req.body : undefined,
-      params: req.method === 'GET' ? req.query : undefined,
+      params,
       headers: forwardHeaders,
       timeout: 30000
     })
