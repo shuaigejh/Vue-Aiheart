@@ -1,12 +1,12 @@
 // Vercel Serverless Function - API代理
 // 将所有 /api/* 请求转发到后端服务器
 
-const axios = require('axios')
+import axios from 'axios'
 
 // 目标后端服务器地址
 const TARGET_BASE_URL = 'http://159.75.169.224:1235'
 
-module.exports = async (req, res) => {
+export default async (req, res) => {
   // 设置CORS响应头，允许所有来源访问
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
