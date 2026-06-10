@@ -18,11 +18,9 @@ module.exports = async (req, res) => {
     return
   }
 
-  // 提取原始请求路径
-  // Vercel rewrite: /api/knowledge/article/page -> /api/proxy/knowledge/article/page
-  // 需要提取出 /knowledge/article/page，然后前面加回 /api
-  const rawPath = req.url.replace('/api/proxy', '').split('?')[0] || '/'
-  const path = '/api' + rawPath
+  // 从 query 中获取原始请求路径，并加回 /api 前缀
+  const originalPath = req.query.path || '/'
+  const path = '/api' + originalPath
   const url = `${TARGET_BASE_URL}${path}`
 
   // 透传请求头
@@ -34,15 +32,16 @@ module.exports = async (req, res) => {
     forwardHeaders['Content-Type'] = req.headers['content-type']
   }
 
-  // GET 请求参数（Vercel 自动解析 query string 到 req.query）
-  const params = req.method === 'GET' ? { ...req.query } : undefined
+  // GET 请求参数（去掉 path，保留原始查询参数）
+  const params = { ...req.query }
+  delete params.path
 
   try {
     const response = await axios({
       url,
       method: req.method,
       data: req.method !== 'GET' ? req.body : undefined,
-      params,
+      params: req.method === 'GET' ? params : undefined,
       headers: forwardHeaders,
       timeout: 30000
     })
