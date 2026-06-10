@@ -103,9 +103,9 @@ const getPageList = () => {
   })
 }
 
-// 判断是否返回图片
+// 判断是否返回图片（使用相对路径，通过Vercel代理访问）
 const getImg = (img) => {
-  return img ? 'http://159.75.169.224:1235' + img : defaultCover
+  return img || defaultCover
 }
 
 // 分页切换

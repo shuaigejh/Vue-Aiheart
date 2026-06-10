@@ -32,21 +32,88 @@ export default async (req, res) => {
     forwardHeaders['Content-Type'] = req.headers['content-type']
   }
 
+  // 检查是否是 SSE 请求
+  const acceptHeader = req.headers.accept || ''
+  const isSSE = acceptHeader.includes('text/event-stream')
+
+  // 检查是否是图片/文件请求（二进制）
+  const isBinary = path.startsWith('/api/files/')
+
+  // 准备请求体
+  let body = undefined
+  if (req.method !== 'GET' && req.body) {
+    if (Buffer.isBuffer(req.body)) {
+      body = req.body
+    } else if (typeof req.body === 'object') {
+      body = req.body
+    } else {
+      body = req.body
+    }
+  }
+
   // GET 请求参数（去掉 path，保留原始查询参数）
   const params = { ...req.query }
   delete params.path
 
   try {
+    if (isSSE) {
+      // SSE 流式请求：使用 axios stream 模式透传
+      const response = await axios({
+        url,
+        method: req.method,
+        data: body,
+        params,
+        headers: forwardHeaders,
+        timeout: 60000,
+        responseType: 'stream'
+      })
+
+      // 透传响应头
+      res.status(response.status)
+      Object.entries(response.headers).forEach(([key, value]) => {
+        if (value && typeof value === 'string') {
+          res.setHeader(key, value)
+        }
+      })
+
+      // 管道传输流式数据
+      response.data.pipe(res)
+      return
+    }
+
+    if (isBinary) {
+      // 二进制请求（图片/文件）：使用 arraybuffer 模式
+      const response = await axios({
+        url,
+        method: req.method,
+        data: body,
+        params,
+        headers: forwardHeaders,
+        timeout: 30000,
+        responseType: 'arraybuffer'
+      })
+
+      res.status(response.status)
+      // 透传 content-type 等头
+      Object.entries(response.headers).forEach(([key, value]) => {
+        if (value && typeof value === 'string') {
+          res.setHeader(key, value)
+        }
+      })
+      res.send(Buffer.from(response.data, 'binary'))
+      return
+    }
+
+    // 普通 JSON 请求
     const response = await axios({
       url,
       method: req.method,
-      data: req.method !== 'GET' ? req.body : undefined,
-      params: req.method === 'GET' ? params : undefined,
+      data: body,
+      params,
       headers: forwardHeaders,
       timeout: 30000
     })
 
-    // 返回后端响应
     res.status(response.status).json(response.data)
   } catch (error) {
     console.error('代理请求失败:', error.message)
