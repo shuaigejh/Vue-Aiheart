@@ -3,7 +3,7 @@
     <div class="navbar-container">
       <div class="brand-section">
         <el-image :src="iconUrl" class="brand-logo" style="height: 50px; width: 50px;" />
-        <h1 class="brand-name">心理健康AI助手</h1>
+        <h1 class="brand-name">恒星AI心理健康助手</h1>
       </div>
       <div class="nav-section">
         <router-link to="/" class="nav-link">首页</router-link>
