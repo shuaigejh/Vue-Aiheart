@@ -123,7 +123,7 @@ router.beforeEach((to, from, next) => {
     }
   }else{
     // 如果未登录，重定向到登录页
-    if(to.path.startsWith('/back')){
+    if(to.path.startsWith('/back') || to.path.startsWith('/consultation') || to.path.startsWith('/emotion-diary')){
       next('/auth/login')
     }else{
       next()
