@@ -9,7 +9,7 @@
         <router-link to="/" class="nav-link">首页</router-link>
         <router-link to="/consultation" class="nav-link" v-if="isLoggedIn">AI咨询</router-link>
         <router-link to="/emotion-diary" class="nav-link" v-if="isLoggedIn">情绪日记</router-link>
-        <router-link to="/knowledge" class="nav-link">知识库</router-link>
+        <router-link to="/knowledge" class="nav-link" v-if="isLoggedIn">知识库</router-link>
         <el-button type="danger" class="logout-btn" v-if="isLoggedIn" @click="handleLogout">退出登录</el-button>
         <template v-else>
           <router-link to="/auth/login" class="nav-link">登录</router-link>
